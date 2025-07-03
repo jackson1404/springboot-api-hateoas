@@ -9,6 +9,7 @@ package com.jackson.springboot_api_hateoas.controller;
 import com.jackson.springboot_api_hateoas.dto.CustomerSummaryDto;
 import com.jackson.springboot_api_hateoas.entity.CustomerEntity;
 import com.jackson.springboot_api_hateoas.service.CustomerService;
+import com.jackson.springboot_api_hateoas.utility.CustomerSummaryDtoAssembler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,13 +40,10 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class CustomerController {
 
     @Autowired
-    private CustomerService customerService;
+    private CustomerSummaryDtoAssembler customerSummaryDtoAssembler;
 
-//    @PostMapping("/createCustomer")
-//    public CustomerEntity createCustomer(@RequestBody CustomerEntity customer){
-//        System.out.println(customer.getCustomerName());
-//        return customerService.createCustomer(customer);
-//    }
+    @Autowired
+    private CustomerService customerService;
 
     @PostMapping("/createCustomer")
     public EntityModel<CustomerSummaryDto> createCustomer(@RequestBody CustomerEntity customer){
@@ -54,8 +52,7 @@ public class CustomerController {
 
         CustomerSummaryDto summaryDto = new CustomerSummaryDto(customerEntity.getCustomerId(), customerEntity.getCustomerName());
 
-
-        EntityModel<CustomerSummaryDto> summaryDtoEntityModel = EntityModel.of(summaryDto);
+        EntityModel<CustomerSummaryDto> summaryDtoEntityModel = customerSummaryDtoAssembler.toModel(summaryDto);
         summaryDtoEntityModel.add(linkTo(methodOn(CustomerController.class).createCustomer(null))
                                           .withSelfRel()
                                           .withType("POST")
@@ -82,35 +79,42 @@ public class CustomerController {
 
         PagedModel<EntityModel<CustomerSummaryDto>> pagedModel = assembler.toModel(
                 summaryPage,
-                summaryDto -> EntityModel.of(summaryDto,
-                                             linkTo(methodOn(CustomerController.class)
-                                                            .getCustomerById(summaryDto.customerId()))
-                                                     .withRel("view-customer")
-                )
+                summaryDto -> customerSummaryDtoAssembler.toModel(summaryDto, true)
+//                summaryDto -> EntityModel.of(summaryDto,
+//                                             linkTo(methodOn(CustomerController.class)
+//                                                            .getCustomerById(summaryDto.customerId()))
+//                                                     .withRel("view-details")
+//                )
         );
 
-        pagedModel.add(
-                linkTo(
-                        methodOn(CustomerController.class).createCustomer(null)
-                )
-                        .withRel("create-customer")
-                        .withType("POST")
-                        .withTitle("create new Customer with JSON request fields {customerName, customerAddress} /POST")
-        );
+
+//        pagedModel.add(
+//                linkTo(
+//                        methodOn(CustomerController.class).createCustomer(null)
+//                )
+//                        .withRel("create-customer")
+//                        .withType("POST")
+//                        .withTitle("create new Customer with JSON request fields {customerName, customerAddress} /POST")
+//        );
 
         return ResponseEntity.ok(pagedModel);
     }
-
 
     @GetMapping("/getCustomerById")
     public ResponseEntity<EntityModel<CustomerEntity>>  getCustomerById(@RequestParam Long customerId){
 
         CustomerEntity customer = customerService.getCustomerById(customerId);
         EntityModel<CustomerEntity> model = EntityModel.of(customer);
-        model.add(linkTo(methodOn(CustomerController.class).getCustomerById(customerId)).withSelfRel());
-//        model.add(linkTo(methodOn(CustomerController.class).getAllCustomers()).withRel("customer-list"));
+        model.add(linkTo(methodOn(CustomerController.class).getCustomerById(customerId))
+                          .withRel("self")
+                          .withType("GET")
+                          .withTitle("GET customer by customer Id"));
+
+        model.add(linkTo(methodOn(CustomerController.class).getAllCustomers(null, null)).withRel("customer-list"));
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(model);
     }
+
+
 
 
 
