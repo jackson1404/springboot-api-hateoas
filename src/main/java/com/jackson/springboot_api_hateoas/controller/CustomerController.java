@@ -41,11 +41,32 @@ public class CustomerController {
     @Autowired
     private CustomerService customerService;
 
+//    @PostMapping("/createCustomer")
+//    public CustomerEntity createCustomer(@RequestBody CustomerEntity customer){
+//        System.out.println(customer.getCustomerName());
+//        return customerService.createCustomer(customer);
+//    }
+
     @PostMapping("/createCustomer")
-    public CustomerEntity createCustomer(@RequestBody CustomerEntity customer){
-        System.out.println(customer.getCustomerName());
-        return customerService.createCustomer(customer);
+    public EntityModel<CustomerSummaryDto> createCustomer(@RequestBody CustomerEntity customer){
+
+        CustomerEntity customerEntity = customerService.createCustomer(customer);
+
+        CustomerSummaryDto summaryDto = new CustomerSummaryDto(customerEntity.getCustomerId(), customerEntity.getCustomerName());
+
+
+        EntityModel<CustomerSummaryDto> summaryDtoEntityModel = EntityModel.of(summaryDto);
+        summaryDtoEntityModel.add(linkTo(methodOn(CustomerController.class).createCustomer(null))
+                                          .withSelfRel()
+                                          .withType("POST")
+                                          .withTitle("create new Customer with JSON request fields {customerName, customerAddress} /POST"));
+        summaryDtoEntityModel.add(linkTo( methodOn(CustomerController.class).getCustomerById(summaryDto.customerId()) )
+                                          .withRel("view-details")
+                                          .withType("GET"));
+
+        return summaryDtoEntityModel;
     }
+
 
     @GetMapping("/getAllCustomers")
     public ResponseEntity<PagedModel<EntityModel<CustomerSummaryDto>>> getAllCustomers(

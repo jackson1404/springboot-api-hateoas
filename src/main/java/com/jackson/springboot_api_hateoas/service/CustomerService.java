@@ -30,7 +30,9 @@ public class CustomerService {
     private CustomerRepository customerRepository;
 
     public Page<CustomerEntity> getAllCustomers(Pageable pageable) {
+
         return customerRepository.findAll(pageable);
+
     }
 
 
