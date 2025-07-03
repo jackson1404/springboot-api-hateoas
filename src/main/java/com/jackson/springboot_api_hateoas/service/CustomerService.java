@@ -9,6 +9,8 @@ package com.jackson.springboot_api_hateoas.service;
 import com.jackson.springboot_api_hateoas.entity.CustomerEntity;
 import com.jackson.springboot_api_hateoas.repository.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,8 +29,8 @@ public class CustomerService {
     @Autowired
     private CustomerRepository customerRepository;
 
-    public List<CustomerEntity> getAllCustomers() {
-        return customerRepository.findAll();
+    public Page<CustomerEntity> getAllCustomers(Pageable pageable) {
+        return customerRepository.findAll(pageable);
     }
 
 
