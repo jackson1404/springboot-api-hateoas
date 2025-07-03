@@ -40,4 +40,8 @@ public class CustomerService {
 
         return customer;
     }
+
+    public CustomerEntity createCustomer(CustomerEntity customer) {
+        return customerRepository.save(customer);
+    }
 }

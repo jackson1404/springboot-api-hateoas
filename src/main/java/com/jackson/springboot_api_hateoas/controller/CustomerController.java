@@ -19,10 +19,7 @@ import org.springframework.hateoas.Link;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.w3c.dom.stylesheets.LinkStyle;
 
 import java.util.List;
@@ -44,9 +41,15 @@ public class CustomerController {
     @Autowired
     private CustomerService customerService;
 
+    @PostMapping("/createCustomer")
+    public CustomerEntity createCustomer(@RequestBody CustomerEntity customer){
+        System.out.println(customer.getCustomerName());
+        return customerService.createCustomer(customer);
+    }
+
     @GetMapping("/getAllCustomers")
     public ResponseEntity<PagedModel<EntityModel<CustomerSummaryDto>>> getAllCustomers(
-            @PageableDefault(size = 10, sort = "customerId") Pageable pageable,
+            @PageableDefault(size = 5) Pageable pageable,
             PagedResourcesAssembler<CustomerSummaryDto> assembler) {
 
         Page<CustomerEntity> page = customerService.getAllCustomers(pageable);
@@ -63,6 +66,15 @@ public class CustomerController {
                                                             .getCustomerById(summaryDto.customerId()))
                                                      .withRel("view-customer")
                 )
+        );
+
+        pagedModel.add(
+                linkTo(
+                        methodOn(CustomerController.class).createCustomer(null)
+                )
+                        .withRel("create-customer")
+                        .withType("POST")
+                        .withTitle("create new Customer with JSON request fields {customerName, customerAddress} /POST")
         );
 
         return ResponseEntity.ok(pagedModel);
